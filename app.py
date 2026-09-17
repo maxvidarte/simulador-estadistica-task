@@ -4,27 +4,42 @@ import streamlit.components.v1 as components
 st.set_page_config(
     page_title="Simulador de Ejercicios de Estadística",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None
+    }
 )
 
-# Estilos CSS para ocultar encabezado, footer, ícono flotante de Streamlit y márgenes
+# Estilos CSS avanzados para eliminar la marca de agua flotante e interfaz nativa
 st.markdown("""
     <style>
-        /* Oculta la barra superior (menú, Fork, GitHub) */
-        header {visibility: hidden !important;}
-        #MainMenu {visibility: hidden !important;}
+        /* Oculta encabezados y menús superiores */
+        [data-testid="stHeader"], header, #MainMenu {
+            display: none !important;
+            visibility: hidden !important;
+        }
         
-        /* Oculta el pie de página y los íconos/marcas de agua de Streamlit */
-        footer {visibility: hidden !important;}
-        .stAppViewerFooter {display: none !important;}
-        [data-testid="stStatusWidget"] {display: none !important;}
-        .stActionButton {display: none !important;}
-        
-        /* Ajusta los márgenes para pantalla completa sin espacios en blanco */
-        .block-container {
+        /* Oculta la insignia flotante verde de Streamlit y el pie de página */
+        footer, 
+        .stAppViewerFooter, 
+        [data-testid="stStatusWidget"],
+        [data-testid="stDecoration"],
+        [data-testid="stToolbar"],
+        div[class*="viewerBadge"],
+        div[class*="stAppToolbar"] {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        /* Ajuste de márgenes */
+        .main .block-container {
             padding: 0rem !important;
             margin: 0rem !important;
+            max-width: 100% !important;
         }
+        
         iframe {
             width: 100%;
             height: 100vh;
