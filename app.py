@@ -4,40 +4,28 @@ import streamlit.components.v1 as components
 st.set_page_config(
     page_title="Simulador de Ejercicios de Estadística",
     layout="wide",
-    initial_sidebar_state="collapsed",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None
-    }
+    initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS avanzados para eliminar la marca de agua flotante e interfaz nativa
+# Estilos CSS completos para ocultar todo el marco de Streamlit
 st.markdown("""
     <style>
-        /* Oculta encabezados y menús superiores */
-        [data-testid="stHeader"], header, #MainMenu {
+        /* Oculta encabezado, menú superior y los 3 puntos */
+        header, #MainMenu, [data-testid="stHeader"] {
             display: none !important;
             visibility: hidden !important;
         }
         
-        /* Oculta la insignia flotante verde de Streamlit y el pie de página */
-        footer, 
-        .stAppViewerFooter, 
-        [data-testid="stStatusWidget"],
-        [data-testid="stDecoration"],
-        [data-testid="stToolbar"],
-        div[class*="viewerBadge"],
-        div[class*="stAppToolbar"] {
+        /* Oculta el footer y botones del desarrollador */
+        footer, [data-testid="stStatusWidget"], .stActionButton, [data-testid="manage-app-button"] {
             display: none !important;
             visibility: hidden !important;
         }
-
-        /* Ajuste de márgenes */
-        .main .block-container {
+        
+        /* Elimina márgenes blancos alrededor de la app */
+        .block-container {
             padding: 0rem !important;
             margin: 0rem !important;
-            max-width: 100% !important;
         }
         
         iframe {
