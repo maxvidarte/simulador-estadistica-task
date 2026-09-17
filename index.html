@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probabilidad y Estadística</title>
+    
+    <!-- Configuración previa para permitir delimitadores $...$ -->
+    <script>
+        window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+        };
+    </script>
+    <!-- Script principal de MathJax -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    ...
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- jStat Statistics Library -->
+    <script src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stRed: '#FF4B4B',
+                        stBg: '#F0F2F6',
+                        stSidebar: '#F8F9FA',
+                        stCard: '#FFFFFF',
+                        stText: '#31333F',
+                        stGray: '#808495'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F0F2F6;
+            color: #31333F;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        /* Custom Streamlit Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d3d3d3;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        /* Metric Card styling */
+        .st-metric {
+            background: #FFFFFF;
+            border: 1px solid #E6E8EB;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-80 bg-stSidebar border-r border-gray-200 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- Streamlit Logo Header -->
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="bg-stRed text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-stText leading-tight">Práctica 4</h1>
+                    <span class="text-xs text-stGray">Simulación de Ejercicios</span>
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-stGray uppercase tracking-wider mb-2">Filtrar por Tema</label>
+                <select id="topicFilter" onchange="filterExercises()" class="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm text-stText focus:outline-none focus:border-stRed">
+                    <option value="ALL">Todos los temas (1-23)</option>
+                    <option value="Normal">Distribución Normal (1-5)</option>
+                    <option value="Exponencial">Distribución Exponencial (6-9)</option>
+                    <option value="Gamma">Distribución Gamma (10-13)</option>
+                    <option value="Chi2">Distribución Chi-Cuadrada (14-16)</option>
+                    <option value="TLC">Muestreo / TLC (17-20)</option>
+                    <option value="tStudent">Distribución t-Student (21-23)</option>
+                </select>
+            </div>
+
+            <!-- Exercise Selector -->
+            <div class="mb-6">
+                <label class="block text-xs font-semibold text-stGray uppercase tracking-wider mb-2">Seleccionar Ejercicio</label>
+                <select id="exerciseSelect" onchange="loadExercise()" class="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm text-stText focus:outline-none focus:border-stRed font-medium">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+
+            <hr class="my-6 border-gray-200">
+
+            <!-- Interactive Dynamic Widgets Container -->
+            <div id="dynamicWidgets" class="space-y-4">
+                <h3 class="text-xs font-semibold text-stGray uppercase tracking-wider mb-2">Parámetros de Entrada</h3>
+                <!-- Dynamic Inputs Populated Here -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 pt-4 border-t border-gray-200 text-xs text-stGray text-center">
+            <p>UNMSM - Facultad de Ciencias Matemáticas</p>
+            <p class="mt-1 font-semibold text-stRed"><i class="fa-solid fa-bolt mr-1"></i> Powered by Streamlit JS Engine</p>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        <!-- Title Header -->
+        <div class="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+            <div class="flex items-center space-x-2 text-stRed text-sm font-semibold uppercase tracking-wider mb-1" id="exerciseCategory">
+                <!-- Category Badge -->
+            </div>
+            <h2 class="text-2xl font-bold text-stText mb-3" id="exerciseTitle">Cargando...</h2>
+            <p class="text-gray-600 leading-relaxed text-sm bg-stBg p-4 rounded-lg border border-gray-200" id="exerciseStatement">
+                <!-- Statement text -->
+            </p>
+        </div>
+
+        <!-- Metrics Display Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="metricsContainer">
+            <!-- Metrics dynamically rendered -->
+        </div>
+
+        <!-- Plotly Chart Section -->
+        <div class="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-stText flex items-center">
+                    <i class="fa-solid fa-chart-area text-stRed mr-2"></i> Visualización de la Distribución
+                </h3>
+                <span class="text-xs bg-red-50 text-stRed border border-red-200 font-semibold px-2.5 py-1 rounded-full" id="chartTypeLabel">
+                    PDF - Área sombreada
+                </span>
+            </div>
+            <div id="plotlyChart" class="w-full h-80"></div>
+        </div>
+
+        <!-- Math Derivation / Step-by-Step LaTeX -->
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h3 class="font-bold text-lg text-stText mb-4 flex items-center">
+                <i class="fa-solid fa-square-root-variable text-stRed mr-2"></i> Solución Detallada y Desarrollo Matemático
+            </h3>
+            <div id="mathSolution" class="prose max-w-none text-stText space-y-4 text-sm leading-relaxed overflow-x-auto">
+                <!-- MathJax LaTeX output -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 23 EXERCISES DEFINITIONS & SOLVERS ---
+        const exercises = [
+            {
+                id: 1,
+                category: "Normal",
+                title: "1. Dist. Normal - Tiempo de ejecución de script RStudio",
+                statement: "El tiempo de compilación y ejecución de un modelo de análisis multivariado mediante un script de RStudio sigue una distribución normal con media $\\mu=45$ segundos y desviación estándar $\\sigma=6$ segundos. a) Calcule $P(X < 40)$. b) Calcule $P(X > 60)$.",
+                params: [
+                    { id: "mu", label: "Media (μ)", min: 10, max: 100, step: 1, val: 45 },
+                    { id: "sigma", label: "Desviación Estándar (σ)", min: 1, max: 20, step: 0.5, val: 6 },
+                    { id: "x1", label: "Umbral Parte a (X < x)", min: 20, max: 60, step: 1, val: 40 },
+                    { id: "x2", label: "Umbral Parte b (X > x)", min: 40, max: 80, step: 1, val: 60 }
+                ],
+                solve: (p) => {
+                    const z1 = (p.x1 - p.mu) / p.sigma;
+                    const probA = jStat.normal.cdf(p.x1, p.mu, p.sigma);
+                    const z2 = (p.x2 - p.mu) / p.sigma;
+                    const probB = 1 - jStat.normal.cdf(p.x2, p.mu, p.sigma);
+
+                    return {
+                        metrics: [
+                            { label: "P(X < " + p.x1 + ")", value: (probA * 100).toFixed(2) + "%", delta: `Z = ${z1.toFixed(2)}` },
+                            { label: "P(X > " + p.x2 + ")", value: (probB * 100).toFixed(4) + "%", delta: `Z = ${z2.toFixed(2)}` },
+                            { label: "Media (μ)", value: `${p.mu} s` },
+                            { label: "Desv. Est. (σ)", value: `${p.sigma} s` }
+                        ],
+                        math: `
+                        <p><b>Definición:</b> La variable aleatoria $X$ representa el tiempo de ejecución en segundos, con $X \\sim N(\\mu = ${p.mu}, \\sigma^2 = ${p.sigma}^2)$.</p>
+                        
+                        <p><b>Parte a)</b> Probabilidad de terminar en menos de ${p.x1} segundos, $P(X < ${p.x1})$:</p>
+                        $$Z_1 = \\frac{X - \\mu}{\\sigma} = \\frac{${p.x1} - ${p.mu}}{${p.sigma}} = ${z1.toFixed(4)}$$
+                        $$P(X < ${p.x1}) = P(Z < ${z1.toFixed(4)}) = \\mathbf{${probA.toFixed(4)}} \\quad (${(probA*100).toFixed(2)}\\%)$$
+
+                        <p><b>Parte b)</b> Probabilidad de tardar más de ${p.x2} segundos (1 minuto), $P(X > ${p.x2})$:</p>
+                        $$Z_2 = \\frac{${p.x2} - ${p.mu}}{${p.sigma}} = ${z2.toFixed(4)}$$
+                        $$P(X > ${p.x2}) = 1 - P(Z \\le ${z2.toFixed(4)}) = 1 - ${jStat.normal.cdf(p.x2, p.mu, p.sigma).toFixed(6)} = \\mathbf{${probB.toFixed(6)}} \\quad (${(probB*100).toFixed(4)}\\%)$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: p.sigma, shade: [
+                            { from: p.mu - 4*p.sigma, to: p.x1, color: 'rgba(255, 75, 75, 0.4)' },
+                            { from: p.x2, to: p.mu + 4*p.sigma, color: 'rgba(31, 119, 180, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 2,
+                category: "Normal",
+                title: "2. Dist. Normal - Consumo de memoria RAM Python",
+                statement: "El consumo de memoria RAM (en GB) para un entorno virtual de Python sigue una distribución normal $X \\sim N(16, 2.25)$. Calcule la probabilidad de que un proceso aleatorio consuma entre 14 GB y 18 GB.",
+                params: [
+                    { id: "mu", label: "Media (μ)", min: 10, max: 25, step: 0.5, val: 16 },
+                    { id: "variance", label: "Varianza (σ²)", min: 0.25, max: 10, step: 0.25, val: 2.25 },
+                    { id: "xMin", label: "Límite Inferior", min: 10, max: 16, step: 0.5, val: 14 },
+                    { id: "xMax", label: "Límite Superior", min: 16, max: 22, step: 0.5, val: 18 }
+                ],
+                solve: (p) => {
+                    const sigma = Math.sqrt(p.variance);
+                    const z1 = (p.xMin - p.mu) / sigma;
+                    const z2 = (p.xMax - p.mu) / sigma;
+                    const cdf1 = jStat.normal.cdf(p.xMin, p.mu, sigma);
+                    const cdf2 = jStat.normal.cdf(p.xMax, p.mu, sigma);
+                    const prob = cdf2 - cdf1;
+
+                    return {
+                        metrics: [
+                            { label: "P(" + p.xMin + " < X < " + p.xMax + ")", value: (prob * 100).toFixed(2) + "%", delta: "Área Central" },
+                            { label: "Desv. Est. (σ)", value: sigma.toFixed(4) + " GB" },
+                            { label: "Z1 (x=" + p.xMin + ")", value: z1.toFixed(2) },
+                            { label: "Z2 (x=" + p.xMax + ")", value: z2.toFixed(2) }
+                        ],
+                        math: `
+                        <p>La varianza dada es $\\sigma^2 = ${p.variance}$, por lo que la desviación estándar es $\\sigma = \\sqrt{${p.variance}} = ${sigma.toFixed(4)}$ GB.</p>
+                        <p>Estandarizamos los límites $X_1 = ${p.xMin}$ y $X_2 = ${p.xMax}$:</p>
+                        $$Z_1 = \\frac{${p.xMin} - ${p.mu}}{${sigma.toFixed(4)}} = ${z1.toFixed(4)}$$
+                        $$Z_2 = \\frac{${p.xMax} - ${p.mu}}{${sigma.toFixed(4)}} = ${z2.toFixed(4)}$$
+                        <p>Calculamos la probabilidad del intervalo:</p>
+                        $$P(${p.xMin} < X < ${p.xMax}) = P(${z1.toFixed(2)} < Z < ${z2.toFixed(2)}) = \\Phi(${z2.toFixed(2)}) - \\Phi(${z1.toFixed(2)})$$
+                        $$= ${cdf2.toFixed(4)} - ${cdf1.toFixed(4)} = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: sigma, shade: [
+                            { from: p.xMin, to: p.xMax, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 3,
+                category: "Normal",
+                title: "3. Dist. Normal - Glucosa basal en Bioestadística",
+                statement: "Mediciones de glucosa basal con distribución $N(105, 12^2)$ mg/dL. Se requiere aislar al 15% de la población con los niveles más altos (percentil 85). ¿Cuál es el nivel mínimo de glucosa necesario?",
+                params: [
+                    { id: "mu", label: "Media (μ)", min: 80, max: 130, step: 1, val: 105 },
+                    { id: "sigma", label: "Desv. Est. (σ)", min: 5, max: 25, step: 1, val: 12 },
+                    { id: "topPct", label: "Top Porcentaje (%)", min: 1, max: 50, step: 1, val: 15 }
+                ],
+                solve: (p) => {
+                    const probLower = 1 - (p.topPct / 100);
+                    const z = jStat.normal.inv(probLower, 0, 1);
+                    const x = p.mu + z * p.sigma;
+
+                    return {
+                        metrics: [
+                            { label: "Glucosa Mínima (x)", value: x.toFixed(2) + " mg/dL", delta: `P(X ≥ x) = ${p.topPct}%` },
+                            { label: "Valor Z crítico", value: z.toFixed(4) },
+                            { label: "Percentil", value: `${(probLower * 100).toFixed(0)}th` }
+                        ],
+                        math: `
+                        <p>Buscamos el valor $x$ tal que $P(X > x) = ${p.topPct / 100}$, equivalente a acumulado $P(X \\le x) = ${probLower.toFixed(2)}$.</p>
+                        <p>Utilizando el quantil de la distribución normal estándar $Z$:</p>
+                        $$P(Z \\le z) = ${probLower.toFixed(2)} \\implies z = \\Phi^{-1}(${probLower.toFixed(2)}) = ${z.toFixed(4)}$$
+                        <p>Despejando $x$ de la fórmula de estandarización $x = \\mu + z \\cdot \\sigma$:</p>
+                        $$x = ${p.mu} + (${z.toFixed(4)} \\times ${p.sigma}) = \\mathbf{${x.toFixed(2)}\\text{ mg/dL}}$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: p.sigma, shade: [
+                            { from: x, to: p.mu + 4*p.sigma, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 4,
+                category: "Normal",
+                title: "4. Dist. Normal - Timeout API Scopus / ScienceDirect",
+                statement: "El tiempo de latencia de scraping se distribuye normalmente con $\\mu=210$ ms y $\\sigma=25$ ms. Configurar un timeout suficiente para que el 95% de las consultas completen exitosamente.",
+                params: [
+                    { id: "mu", label: "Media (μ)", min: 100, max: 400, step: 5, val: 210 },
+                    { id: "sigma", label: "Desv. Est. (σ)", min: 5, max: 60, step: 1, val: 25 },
+                    { id: "coverage", label: "% Cobertura Deseado", min: 80, max: 99.9, step: 0.5, val: 95 }
+                ],
+                solve: (p) => {
+                    const prob = p.coverage / 100;
+                    const z = jStat.normal.inv(prob, 0, 1);
+                    const timeout = p.mu + z * p.sigma;
+
+                    return {
+                        metrics: [
+                            { label: "Timeout Recomendado", value: timeout.toFixed(2) + " ms", delta: `${p.coverage}% de éxito` },
+                            { label: "Z (p=" + prob + ")", value: z.toFixed(4) }
+                        ],
+                        math: `
+                        <p>Queremos encontrar el tiempo umbral $t$ tal que la probabilidad de completar la solicitud en menor o igual tiempo sea $P(X \\le t) = ${prob}$.</p>
+                        $$z = \\Phi^{-1}(${prob}) = ${z.toFixed(4)}$$
+                        $$t = \\mu + z \\cdot \\sigma = ${p.mu} + (${z.toFixed(4)} \\times ${p.sigma}) = \\mathbf{${timeout.toFixed(2)}\\text{ ms}}$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: p.sigma, shade: [
+                            { from: p.mu - 4*p.sigma, to: timeout, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 5,
+                category: "Normal",
+                title: "5. Dist. Normal - Simulaciones Montecarlo en Servidor",
+                statement: "En un servidor se ejecutan $N=500$ simulaciones. El uso de CPU de cada una sigue $N(75\\%, 8\\%)$. ¿Cuántas simulaciones superarán el 90% de CPU activando la alerta?",
+                params: [
+                    { id: "N", label: "Num. Simulaciones (N)", min: 50, max: 2000, step: 50, val: 500 },
+                    { id: "mu", label: "Media uso CPU (%)", min: 50, max: 90, step: 1, val: 75 },
+                    { id: "sigma", label: "Desv. Est. (%)", min: 1, max: 20, step: 0.5, val: 8 },
+                    { id: "threshold", label: "Umbral Alerta (%)", min: 70, max: 99, step: 1, val: 90 }
+                ],
+                solve: (p) => {
+                    const z = (p.threshold - p.mu) / p.sigma;
+                    const prob = 1 - jStat.normal.cdf(p.threshold, p.mu, p.sigma);
+                    const expected = p.N * prob;
+
+                    return {
+                        metrics: [
+                            { label: "Simulaciones Esperadas", value: expected.toFixed(2), delta: `~${Math.round(expected)} máquinas` },
+                            { label: "Probabilidad P(X > " + p.threshold + "%)", value: (prob * 100).toFixed(3) + "%" },
+                            { label: "Puntaje Z", value: z.toFixed(2) }
+                        ],
+                        math: `
+                        <p>1. Calculamos primero la probabilidad de que una simulación individual supere el ${p.threshold}% de uso de CPU:</p>
+                        $$Z = \\frac{${p.threshold} - ${p.mu}}{${p.sigma}} = ${z.toFixed(4)}$$
+                        $$P(X > ${p.threshold}) = 1 - \\Phi(${z.toFixed(4)}) = 1 - ${jStat.normal.cdf(p.threshold, p.mu, p.sigma).toFixed(5)} = \\mathbf{${prob.toFixed(5)}}$$
+                        <p>2. Multiplicamos por el total de simulaciones independientes $N = ${p.N}$:</p>
+                        $$E(\\text{Alertas}) = N \\times P(X > ${p.threshold}) = ${p.N} \\times ${prob.toFixed(5)} = \\mathbf{${expected.toFixed(2)} \\approx ${Math.round(expected)}\\text{ simulaciones}}$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: p.sigma, shade: [
+                            { from: p.threshold, to: p.mu + 4*p.sigma, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 6,
+                category: "Exponencial",
+                title: "6. Dist. Exponencial - Latencia API Scopus",
+                statement: "El tiempo de respuesta $X$ en segundos sigue una distribución exponencial con tasa $\\lambda=0.25$ consultas/seg. a) $P(X > 6)$. b) $P(2 < X < 5)$.",
+                params: [
+                    { id: "lambda", label: "Tasa (λ)", min: 0.05, max: 1.0, step: 0.05, val: 0.25 },
+                    { id: "xA", label: "Umbral Parte a (X > x)", min: 1, max: 15, step: 1, val: 6 },
+                    { id: "xB1", label: "Parte b Límite Inf", min: 0.5, max: 5, step: 0.5, val: 2 },
+                    { id: "xB2", label: "Parte b Límite Sup", min: 3, max: 10, step: 0.5, val: 5 }
+                ],
+                solve: (p) => {
+                    const probA = Math.exp(-p.lambda * p.xA);
+                    const probB = Math.exp(-p.lambda * p.xB1) - Math.exp(-p.lambda * p.xB2);
+
+                    return {
+                        metrics: [
+                            { label: "P(X > " + p.xA + ")", value: (probA * 100).toFixed(2) + "%" },
+                            { label: "P(" + p.xB1 + " < X < " + p.xB2 + ")", value: (probB * 100).toFixed(2) + "%" },
+                            { label: "Tiempo Medio (1/λ)", value: (1 / p.lambda).toFixed(2) + " s" }
+                        ],
+                        math: `
+                        <p>Función de densidad de probabilidad acumulada $F(x) = 1 - e^{-\\lambda x}$ y supervivencia $P(X > x) = e^{-\\lambda x}$.</p>
+                        <p><b>Parte a)</b> $P(X > ${p.xA})$:</p>
+                        $$P(X > ${p.xA}) = e^{-${p.lambda} \\times ${p.xA}} = e^{-${(p.lambda*p.xA).toFixed(2)}} = \\mathbf{${probA.toFixed(4)}} \\quad (${(probA*100).toFixed(2)}\\%)$$
+                        <p><b>Parte b)</b> $P(${p.xB1} < X < ${p.xB2})$:</p>
+                        $$P(${p.xB1} < X < ${p.xB2}) = e^{-\\lambda(${p.xB1})} - e^{-\\lambda(${p.xB2})} = e^{-${(p.lambda*p.xB1).toFixed(2)}} - e^{-${(p.lambda*p.xB2).toFixed(2)}}$$
+                        $$= ${Math.exp(-p.lambda*p.xB1).toFixed(4)} - ${Math.exp(-p.lambda*p.xB2).toFixed(4)} = \\mathbf{${probB.toFixed(4)}} \\quad (${(probB*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'exponential', lambda: p.lambda, max: 15, shade: [
+                            { from: p.xA, to: 15, color: 'rgba(255, 75, 75, 0.4)' },
+                            { from: p.xB1, to: p.xB2, color: 'rgba(31, 119, 180, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 7,
+                category: "Exponencial",
+                title: "7. Dist. Exponencial - Tiempo RStudio en Genómica",
+                statement: "El tiempo para un análisis de correspondencia múltiple en RStudio sigue una distribución exponencial con tiempo promedio de 8 minutos $(\\lambda = 1/8)$. a) Tiempo mediano. b) Tiempo máximo para que el 85% termine.",
+                params: [
+                    { id: "mean", label: "Tiempo Promedio (min)", min: 1, max: 30, step: 1, val: 8 },
+                    { id: "pctB", label: "Porcentaje Completado (%)", min: 50, max: 99, step: 1, val: 85 }
+                ],
+                solve: (p) => {
+                    const lambda = 1 / p.mean;
+                    const median = Math.LN2 / lambda;
+                    const pFrac = p.pctB / 100;
+                    const tLimit = -Math.log(1 - pFrac) / lambda;
+
+                    return {
+                        metrics: [
+                            { label: "Mediana (50%)", value: median.toFixed(2) + " min" },
+                            { label: `Límite ${p.pctB}% Eval.`, value: tLimit.toFixed(2) + " min" },
+                            { label: "Tasa λ", value: lambda.toFixed(4) }
+                        ],
+                        math: `
+                        <p>Dado que el tiempo medio es $E(X) = ${p.mean}$ min, la tasa es $\\lambda = 1/${p.mean} = ${lambda.toFixed(4)}$ min$^{-1}$.</p>
+                        <p><b>Parte a) Mediana ($x_{0.50}$):</b> Es el valor donde $F(x) = 0.50$:</p>
+                        $$1 - e^{-\\lambda x_{0.50}} = 0.50 \\implies e^{-\\lambda x_{0.50}} = 0.50$$
+                        $$x_{0.50} = \\frac{\\ln(2)}{\\lambda} = ${p.mean} \\cdot \\ln(2) = \\mathbf{${median.toFixed(2)}\\text{ minutos}}$$
+                        <p><b>Parte b) Límite para el ${p.pctB}% de los scripts:</b></p>
+                        $$1 - e^{-\\lambda t} = ${pFrac} \\implies e^{-\\lambda t} = ${(1 - pFrac).toFixed(2)}$$
+                        $$t = \\frac{-\\ln(${ (1 - pFrac).toFixed(2) })}{\\lambda} = ${p.mean} \\cdot \\ln(${ (1 / (1-pFrac)).toFixed(2) }) = \\mathbf{${tLimit.toFixed(2)}\\text{ minutos}}$$
+                        `,
+                        chart: { type: 'exponential', lambda: lambda, max: p.mean * 4, shade: [
+                            { from: 0, to: median, color: 'rgba(255, 75, 75, 0.4)' },
+                            { from: 0, to: tLimit, color: 'rgba(31, 119, 180, 0.2)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 8,
+                category: "Exponencial",
+                title: "8. Dist. Exponencial - Memoria RAM (Propiedad Falta de Memoria)",
+                statement: "Tiempo continuo de operatividad con media $\\mu=1200$ horas. Si un módulo ya ha funcionado 400 horas, ¿cuál es la probabilidad de que funcione al menos 300 horas adicionales sin fallar?",
+                params: [
+                    { id: "mean", label: "Media (horas)", min: 100, max: 3000, step: 100, val: 1200 },
+                    { id: "tGiven", label: "Horas ya transcurridas", min: 100, max: 1000, step: 50, val: 400 },
+                    { id: "tAdd", label: "Horas Adicionales", min: 50, max: 1000, step: 50, val: 300 }
+                ],
+                solve: (p) => {
+                    const lambda = 1 / p.mean;
+                    const prob = Math.exp(-lambda * p.tAdd);
+
+                    return {
+                        metrics: [
+                            { label: "P(X > " + (p.tGiven + p.tAdd) + " | X > " + p.tGiven + ")", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "Equivalente P(X > " + p.tAdd + ")", value: prob.toFixed(4) },
+                            { label: "Tasa λ", value: lambda.toFixed(6) }
+                        ],
+                        math: `
+                        <p>Por la <b>Propiedad de Falta de Memoria</b> de la distribución Exponencial:</p>
+                        $$P(X > t + s \\mid X > t) = P(X > s)$$
+                        <p>Aplicando a los valores dados ($t = ${p.tGiven}$, $s = ${p.tAdd}$):</p>
+                        $$P(X > ${p.tGiven + p.tAdd} \\mid X > ${p.tGiven}) = P(X > ${p.tAdd})$$
+                        <p>Calculando directamente para $s = ${p.tAdd}$ con $\\lambda = 1/${p.mean}$:</p>
+                        $$P(X > ${p.tAdd}) = e^{-\\lambda \\cdot ${p.tAdd}} = e^{-\\frac{${p.tAdd}}{${p.mean}}} = e^{-${(p.tAdd/p.mean).toFixed(4)}} = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'exponential', lambda: lambda, max: p.mean * 3, shade: [
+                            { from: p.tAdd, to: p.mean * 3, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 9,
+                category: "Exponencial",
+                title: "9. Dist. Exponencial - Peticiones a API de Análisis Estadístico",
+                statement: "Llegada de peticiones a una API con promedio de 15 peticiones por minuto. a) Defina la tasa $\\lambda$ en segundos. b) Calcule la probabilidad de recibir la siguiente petición en menos de 3 segundos.",
+                params: [
+                    { id: "reqPerMin", label: "Peticiones por minuto", min: 1, max: 60, step: 1, val: 15 },
+                    { id: "targetSec", label: "Tiempo Objetivo (seg)", min: 0.5, max: 10, step: 0.5, val: 3 }
+                ],
+                solve: (p) => {
+                    const lambdaSec = p.reqPerMin / 60;
+                    const prob = 1 - Math.exp(-lambdaSec * p.targetSec);
+
+                    return {
+                        metrics: [
+                            { label: "Tasa (λ por seg)", value: lambdaSec.toFixed(4) + " req/s" },
+                            { label: "P(X < " + p.targetSec + " s)", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "Tiempo Medio entre req", value: (1 / lambdaSec).toFixed(1) + " s" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Tasa en escala de segundos:</b></p>
+                        $$\\lambda_{\\text{seg}} = \\frac{${p.reqPerMin} \\text{ peticiones}}{60 \\text{ segundos}} = \\mathbf{${lambdaSec.toFixed(4)}\\text{ req/seg}}$$
+
+                        <p><b>Parte b) Probabilidad de llegada en menos de ${p.targetSec} segundos:</b></p>
+                        $$P(X < ${p.targetSec}) = 1 - e^{-\\lambda_{\\text{seg}} \\cdot ${p.targetSec}} = 1 - e^{-(${lambdaSec.toFixed(4)} \\times ${p.targetSec})}$$
+                        $$= 1 - e^{-${(lambdaSec * p.targetSec).toFixed(2)}} = 1 - ${Math.exp(-lambdaSec * p.targetSec).toFixed(4)} = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'exponential', lambda: lambdaSec, max: 12, shade: [
+                            { from: 0, to: p.targetSec, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 10,
+                category: "Gamma",
+                title: "10. Dist. Gamma - Algoritmo Clúster Python",
+                statement: "Un algoritmo requiere $k=4$ iteraciones independientes con tiempo medio de 2 segundos por iteración. El tiempo total $X$ sigue una distribución Gamma. Calcule $P(X < 10\\text{ s})$.",
+                params: [
+                    { id: "alpha", label: "Forma (α)", min: 1, max: 10, step: 1, val: 4 },
+                    { id: "beta", label: "Escala β (seg/iter)", min: 0.5, max: 5, step: 0.5, val: 2 },
+                    { id: "targetTime", label: "Tiempo Objetivo (s)", min: 2, max: 20, step: 1, val: 10 }
+                ],
+                solve: (p) => {
+                    // Gamma CDF using jStat (shape alpha, scale beta)
+                    const prob = jStat.gamma.cdf(p.targetTime, p.alpha, p.beta);
+                    const mean = p.alpha * p.beta;
+
+                    return {
+                        metrics: [
+                            { label: "P(X < " + p.targetTime + " s)", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "Parámetro α (forma)", value: p.alpha },
+                            { label: "Parámetro β (escala)", value: p.beta + " s" },
+                            { label: "Tiempo Esperado E(X)", value: mean.toFixed(1) + " s" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Especificación de Parámetros:</b></p>
+                        <p>Al sumar $\\alpha = ${p.alpha}$ variables exponenciales independientes con media $\\beta = ${p.beta}$, obtenemos $X \\sim \\text{Gamma}(\\alpha = ${p.alpha}, \\beta = ${p.beta})$.</p>
+
+                        <p><b>Parte b) Cálculo de $P(X < ${p.targetTime})$:</b></p>
+                        $$P(X < ${p.targetTime}) = \\int_0^{${p.targetTime}} \\frac{1}{\\Gamma(${p.alpha}) \\cdot ${p.beta}^{${p.alpha}}} x^{${p.alpha}-1} e^{-x/${p.beta}} dx$$
+                        <p>Evaluando la integral acumulada con la función Gamma incompleta regularizada:</p>
+                        $$P(X < ${p.targetTime}) = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'gamma', shape: p.alpha, scale: p.beta, max: mean * 2.5, shade: [
+                            { from: 0, to: p.targetTime, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 11,
+                category: "Gamma",
+                title: "11. Dist. Gamma - Procesamiento de Matrices ACP",
+                statement: "El tiempo (en min) para procesar 3 trabajos tiene distribución Gamma con parámetro de forma $\\alpha=3$ y tasa $\\lambda=0.5$ trabajos/min (escala $\\beta=1/\\lambda=2$). a) Determine $E(X)$ y $SD(X)$. b) $P(X > 8)$.",
+                params: [
+                    { id: "alpha", label: "Forma (α)", min: 1, max: 8, step: 1, val: 3 },
+                    { id: "rate", label: "Tasa (λ)", min: 0.1, max: 2.0, step: 0.1, val: 0.5 },
+                    { id: "targetTime", label: "Tiempo Límite (min)", min: 2, max: 20, step: 1, val: 8 }
+                ],
+                solve: (p) => {
+                    const beta = 1 / p.rate;
+                    const mean = p.alpha * beta;
+                    const sd = Math.sqrt(p.alpha) * beta;
+                    const prob = 1 - jStat.gamma.cdf(p.targetTime, p.alpha, beta);
+
+                    return {
+                        metrics: [
+                            { label: "Tiempo Esperado E(X)", value: mean.toFixed(2) + " min" },
+                            { label: "Desv. Estándar SD(X)", value: sd.toFixed(2) + " min" },
+                            { label: "P(X > " + p.targetTime + " min)", value: (prob * 100).toFixed(2) + "%" }
+                        ],
+                        math: `
+                        <p>Con tasa $\\lambda = ${p.rate}$, la escala es $\\beta = 1/\\lambda = ${beta}$ min.</p>
+                        <p><b>Parte a) Esperanza y Desviación Estándar:</b></p>
+                        $$E(X) = \\alpha \\cdot \\beta = ${p.alpha} \\times ${beta} = \\mathbf{${mean.toFixed(2)}\\text{ minutos}}$$
+                        $$V(X) = \\alpha \\cdot \\beta^2 = ${p.alpha} \\times ${beta}^2 = ${(p.alpha*beta*beta).toFixed(2)}$$
+                        $$SD(X) = \\sqrt{V(X)} = \\sqrt{${(p.alpha*beta*beta).toFixed(2)}} = \\mathbf{${sd.toFixed(2)}\\text{ minutos}}$$
+
+                        <p><b>Parte b) Probabilidad $P(X > ${p.targetTime})$:</b></p>
+                        $$P(X > ${p.targetTime}) = 1 - F(${p.targetTime}) = 1 - ${jStat.gamma.cdf(p.targetTime, p.alpha, beta).toFixed(4)} = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'gamma', shape: p.alpha, scale: beta, max: mean * 3, shade: [
+                            { from: p.targetTime, to: mean * 3, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 12,
+                category: "Gamma",
+                title: "12. Dist. Gamma - Bot Bibliometrix Scopus",
+                statement: "Descarga de 5 lotes con $T \\sim \\text{Gamma}(\\alpha=5, \\beta=0.4\\text{ horas})$. Calcule la probabilidad de que el bot termine en un tiempo entre 1.5 y 2.5 horas.",
+                params: [
+                    { id: "alpha", label: "Forma (α)", min: 1, max: 10, step: 1, val: 5 },
+                    { id: "beta", label: "Escala (β horas)", min: 0.1, max: 2.0, step: 0.1, val: 0.4 },
+                    { id: "tMin", label: "Límite Inferior (h)", min: 0.5, max: 3, step: 0.1, val: 1.5 },
+                    { id: "tMax", label: "Límite Superior (h)", min: 2, max: 5, step: 0.1, val: 2.5 }
+                ],
+                solve: (p) => {
+                    const cdf1 = jStat.gamma.cdf(p.tMin, p.alpha, p.beta);
+                    const cdf2 = jStat.gamma.cdf(p.tMax, p.alpha, p.beta);
+                    const prob = cdf2 - cdf1;
+
+                    return {
+                        metrics: [
+                            { label: "P(" + p.tMin + " < T < " + p.tMax + ")", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "CDF(" + p.tMax + ")", value: cdf2.toFixed(4) },
+                            { label: "CDF(" + p.tMin + ")", value: cdf1.toFixed(4) },
+                            { label: "E(T)", value: (p.alpha * p.beta).toFixed(1) + " h" }
+                        ],
+                        math: `
+                        <p>La variable $T \\sim \\text{Gamma}(\\alpha=${p.alpha}, \\beta=${p.beta})$. La media teórica es $E(T) = ${p.alpha} \\times ${p.beta} = ${(p.alpha*p.beta).toFixed(1)}$ horas.</p>
+                        <p>Calculamos la probabilidad del intervalo acumulado:</p>
+                        $$P(${p.tMin} < T < ${p.tMax}) = F(${p.tMax}) - F(${p.tMin})$$
+                        $$F(${p.tMax}) = ${cdf2.toFixed(4)}, \\quad F(${p.tMin}) = ${cdf1.toFixed(4)}$$
+                        $$P(${p.tMin} < T < ${p.tMax}) = ${cdf2.toFixed(4)} - ${cdf1.toFixed(4)} = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'gamma', shape: p.alpha, scale: p.beta, max: 5, shade: [
+                            { from: p.tMin, to: p.tMax, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 13,
+                category: "Gamma",
+                title: "13. Dist. Gamma / Poisson - Clúster Desconexiones",
+                statement: "Desconexiones de red en un clúster siguen un proceso de Poisson con 1 caída cada 15 días. a) Distribución del tiempo hasta 2 desconexiones. b) Probabilidad de operar ininterrumpidamente al menos 20 días antes de la 2da caída.",
+                params: [
+                    { id: "meanDays", label: "Días por caída (β)", min: 5, max: 30, step: 1, val: 15 },
+                    { id: "events", label: "Número de caídas (α)", min: 1, max: 5, step: 1, val: 2 },
+                    { id: "targetDays", label: "Días operando (Y)", min: 5, max: 40, step: 1, val: 20 }
+                ],
+                solve: (p) => {
+                    const alpha = p.events;
+                    const beta = p.meanDays;
+                    const prob = 1 - jStat.gamma.cdf(p.targetDays, alpha, beta);
+
+                    return {
+                        metrics: [
+                            { label: "P(Y ≥ " + p.targetDays + " días)", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "Distribución", value: `Gamma(α=${alpha}, β=${beta})` },
+                            { label: "Tiempo Esperado 2da caída", value: (alpha * beta) + " días" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Definición Matemática:</b></p>
+                        <p>El tiempo hasta la ocurrencia de $\\alpha = ${alpha}$ eventos Poisson independientes con tasa $\\lambda = 1/${beta}$ sigue una distribución Gamma con $\\alpha = ${alpha}$ y escala $\\beta = ${beta}$ días:</p>
+                        $$Y \\sim \\text{Gamma}(\\alpha = ${alpha}, \\beta = ${beta})$$
+                        $$f_Y(y) = \\frac{1}{\\Gamma(${alpha}) \\cdot ${beta}^{${alpha}}} y^{${alpha}-1} e^{-y/${beta}} = \\frac{1}{${beta}^2} y e^{-y/${beta}}, \\quad y > 0$$
+
+                        <p><b>Parte b) Probabilidad $P(Y \\ge ${p.targetDays})$:</b></p>
+                        $$P(Y \\ge ${p.targetDays}) = 1 - F(${p.targetDays}) = e^{-${p.targetDays}/${beta}} \\left(1 + \\frac{${p.targetDays}}{${beta}}\\right)$$
+                        $$= e^{-${(p.targetDays/beta).toFixed(4)}} \\left(1 + ${(p.targetDays/beta).toFixed(4)}\\right) = ${Math.exp(-p.targetDays/beta).toFixed(4)} \\times ${(1 + p.targetDays/beta).toFixed(4)} = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'gamma', shape: alpha, scale: beta, max: 80, shade: [
+                            { from: p.targetDays, to: 80, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 14,
+                category: "Chi2",
+                title: "14. Dist. Chi-Cuadrada - Varianza Muestral Limpieza DataFrames",
+                statement: "Tiempo de ejecuciones en Python con varianza poblacional $\\sigma^2=12\\text{ ms}^2$. Muestra aleatoria $n=16$. a) Grados de libertad. b) $P(S^2 > 18.66)$.",
+                params: [
+                    { id: "sigmaSq", label: "Varianza Poblacional (σ²)", min: 1, max: 30, step: 1, val: 12 },
+                    { id: "n", label: "Muestra (n)", min: 2, max: 50, step: 1, val: 16 },
+                    { id: "sSqThreshold", label: "Varianza Muestral (S²)", min: 5, max: 40, step: 0.5, val: 18.66 }
+                ],
+                solve: (p) => {
+                    const df = p.n - 1;
+                    const chi2Val = (df * p.sSqThreshold) / p.sigmaSq;
+                    const prob = 1 - jStat.chisquare.cdf(chi2Val, df);
+
+                    return {
+                        metrics: [
+                            { label: "Grados de Libertad (v)", value: df },
+                            { label: "Valor Chi-cuadrado (χ²)", value: chi2Val.toFixed(3) },
+                            { label: "P(S² > " + p.sSqThreshold + ")", value: (prob * 100).toFixed(2) + "%" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Grados de libertad:</b></p>
+                        $$\\nu = n - 1 = ${p.n} - 1 = \\mathbf{${df}}$$
+                        <p>La variable $Q = \\frac{(n-1)S^2}{\\sigma^2}$ sigue una distribución $\\chi^2_{${df}}$.</p>
+
+                        <p><b>Parte b) Probabilidad $P(S^2 > ${p.sSqThreshold})$:</b></p>
+                        $$\\chi^2_{\\text{calc}} = \\frac{(${p.n}-1) \\times ${p.sSqThreshold}}{${p.sigmaSq}} = \\frac{${df} \\times ${p.sSqThreshold}}{${p.sigmaSq}} = \\mathbf{${chi2Val.toFixed(3)}}$$
+                        $$P(S^2 > ${p.sSqThreshold}) = P(\\chi^2_{${df}} > ${chi2Val.toFixed(3)}) = 1 - F_{\\chi^2}(${chi2Val.toFixed(3)}) = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'chisquare', df: df, max: df * 3, shade: [
+                            { from: chi2Val, to: df * 3, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 15,
+                category: "Chi2",
+                title: "15. Dist. Chi-Cuadrada - Errores Estandarizados RStudio",
+                statement: "Suma de cuadrados de $k=8$ errores estandarizados $Z_i \\sim N(0,1)$, $W = \\sum_{i=1}^8 Z_i^2$. a) $E(W)$ y $V(W)$. b) $P(W < 3.490)$.",
+                params: [
+                    { id: "k", label: "Grados de libertad (k)", min: 1, max: 20, step: 1, val: 8 },
+                    { id: "wThreshold", label: "Umbral W", min: 0.5, max: 20, step: 0.1, val: 3.490 }
+                ],
+                solve: (p) => {
+                    const expected = p.k;
+                    const variance = 2 * p.k;
+                    const prob = jStat.chisquare.cdf(p.wThreshold, p.k);
+
+                    return {
+                        metrics: [
+                            { label: "E(W)", value: expected },
+                            { label: "V(W)", value: variance },
+                            { label: "P(W < " + p.wThreshold + ")", value: (prob * 100).toFixed(2) + "%" }
+                        ],
+                        math: `
+                        <p>Por definición, la suma de $k=${p.k}$ variables $Z^2$ independientes sigue una distribución Chi-Cuadrada $W \\sim \\chi^2_{k=${p.k}}$.</p>
+
+                        <p><b>Parte a) Esperanza y Varianza:</b></p>
+                        $$E(W) = k = \\mathbf{${expected}}$$
+                        $$V(W) = 2k = 2(${p.k}) = \\mathbf{${variance}}$$
+
+                        <p><b>Parte b) Probabilidad $P(W < ${p.wThreshold})$:</b></p>
+                        $$P(W < ${p.wThreshold}) = F_{\\chi^2_{${p.k}}}(${p.wThreshold}) = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'chisquare', df: p.k, max: p.k * 3, shade: [
+                            { from: 0, to: p.wThreshold, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 16,
+                category: "Chi2",
+                title: "16. Dist. Chi-Cuadrada - Prueba de Bondad de Ajuste",
+                statement: "Simulación de mutaciones en $k=10$ categorías con estadístico $\\chi^2=16.919$. a) Calcular p-valor con $gl = k-1$. b) Decisión al nivel $\\alpha=0.05$.",
+                params: [
+                    { id: "k", label: "Categorías (k)", min: 3, max: 20, step: 1, val: 10 },
+                    { id: "chi2Stat", label: "Estadístico χ²", min: 1, max: 40, step: 0.1, val: 16.919 },
+                    { id: "alpha", label: "Nivel de Significación (α)", min: 0.01, max: 0.10, step: 0.01, val: 0.05 }
+                ],
+                solve: (p) => {
+                    const df = p.k - 1;
+                    const pValue = 1 - jStat.chisquare.cdf(p.chi2Stat, df);
+                    const reject = pValue < p.alpha;
+
+                    return {
+                        metrics: [
+                            { label: "p-valor", value: pValue.toFixed(4), delta: reject ? "Rechazar H0" : "No Rechazar H0" },
+                            { label: "Grados de libertad", value: df },
+                            { label: "Decisión (α=" + p.alpha + ")", value: reject ? "RECHAZAR" : "NO RECHAZAR" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Grados de libertad y p-valor:</b></p>
+                        $$\\nu = k - 1 = ${p.k} - 1 = ${df}$$
+                        $$\\text{p-valor} = P(\\chi^2_{${df}} \\ge ${p.chi2Stat}) = 1 - F_{\\chi^2}(${p.chi2Stat}) = \\mathbf{${pValue.toFixed(4)}}$$
+
+                        <p><b>Parte b) Evaluación estadística con $\\alpha = ${p.alpha}$:</b></p>
+                        <p>Dado que el p-valor ($${pValue.toFixed(4)}$$) es ${reject ? '<' : '>='} $\\alpha = ${p.alpha}$:</p>
+                        <p><b>Conclusión:</b> ${reject ? 'Se RECHAZA la hipótesis nula. Existen anomalías estructurales significativas en la simulación.' : 'NO se rechaza la hipótesis nula. El algoritmo se ajusta correctamente a la distribución uniforme.'}</p>
+                        `,
+                        chart: { type: 'chisquare', df: df, max: df * 3, shade: [
+                            { from: p.chi2Stat, to: df * 3, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 17,
+                category: "TLC",
+                title: "17. Muestreo Normal - Consumo RAM en ACP Genómico",
+                statement: "Consumo de RAM por matriz $X \\sim N(\\mu=4.2\\text{ GB}, \\sigma=0.8\\text{ GB})$. Muestra $n=16$. a) Error estándar $SE$. b) $P(\\bar{X} > 4.6\\text{ GB})$.",
+                params: [
+                    { id: "mu", label: "Media Poblacional (μ)", min: 2, max: 10, step: 0.1, val: 4.2 },
+                    { id: "sigma", label: "Desv. Est. (σ)", min: 0.1, max: 3.0, step: 0.1, val: 0.8 },
+                    { id: "n", label: "Muestra (n)", min: 4, max: 100, step: 1, val: 16 },
+                    { id: "targetXbar", label: "Media Objetivo (X̄)", min: 3, max: 7, step: 0.1, val: 4.6 }
+                ],
+                solve: (p) => {
+                    const se = p.sigma / Math.sqrt(p.n);
+                    const z = (p.targetXbar - p.mu) / se;
+                    const prob = 1 - jStat.normal.cdf(p.targetXbar, p.mu, se);
+
+                    return {
+                        metrics: [
+                            { label: "Error Estándar (SE)", value: se.toFixed(4) + " GB" },
+                            { label: "Punctuation Z", value: z.toFixed(2) },
+                            { label: "P(X̄ > " + p.targetXbar + ")", value: (prob * 100).toFixed(2) + "%" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Error estándar de la media muestral $\\sigma_{\\bar{X}}$:</b></p>
+                        $$\\sigma_{\\bar{X}} = \\frac{\\sigma}{\\sqrt{n}} = \\frac{${p.sigma}}{\\sqrt{${p.n}}} = \\frac{${p.sigma}}{${Math.sqrt(p.n)}} = \\mathbf{${se.toFixed(4)}\\text{ GB}}$$
+
+                        <p><b>Parte b) Probabilidad de que la media muestral supere ${p.targetXbar} GB:</b></p>
+                        $$Z = \\frac{\\bar{X} - \\mu}{\\sigma_{\\bar{X}}} = \\frac{${p.targetXbar} - ${p.mu}}{${se.toFixed(4)}} = ${z.toFixed(2)}$$
+                        $$P(\\bar{X} > ${p.targetXbar}) = P(Z > ${z.toFixed(2)}) = 1 - \\Phi(${z.toFixed(2)}) = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: se, shade: [
+                            { from: p.targetXbar, to: p.mu + 4*se, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 18,
+                category: "TLC",
+                title: "18. TLC - Citas Scopus en Bibliometrix",
+                statement: "Número de citas asimétrico con $\\mu=45$ y $\\sigma=24$. Muestra $n=64$. a) Justificación del TLC. b) $P(40 < \\bar{X} < 51)$.",
+                params: [
+                    { id: "mu", label: "Media Poblacional (μ)", min: 20, max: 100, step: 1, val: 45 },
+                    { id: "sigma", label: "Desv. Est. (σ)", min: 5, max: 50, step: 1, val: 24 },
+                    { id: "n", label: "Tamaño Muestra (n)", min: 30, max: 200, step: 1, val: 64 },
+                    { id: "x1", label: "Límite Inf (X̄)", min: 20, max: 45, step: 1, val: 40 },
+                    { id: "x2", label: "Límite Sup (X̄)", min: 45, max: 80, step: 1, val: 51 }
+                ],
+                solve: (p) => {
+                    const se = p.sigma / Math.sqrt(p.n);
+                    const z1 = (p.x1 - p.mu) / se;
+                    const z2 = (p.x2 - p.mu) / se;
+                    const prob = jStat.normal.cdf(p.x2, p.mu, se) - jStat.normal.cdf(p.x1, p.mu, se);
+
+                    return {
+                        metrics: [
+                            { label: "Error Estándar (SE)", value: se.toFixed(2) + " citas" },
+                            { label: "P(" + p.x1 + " < X̄ < " + p.x2 + ")", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "Z1", value: z1.toFixed(2) },
+                            { label: "Z2", value: z2.toFixed(2) }
+                        ],
+                        math: `
+                        <p><b>Parte a) Justificación del Teorema del Límite Central (TLC):</b></p>
+                        <p>Aunque la población original tiene un fuerte sesgo a la derecha, dado que el tamaño muestral $n = ${p.n} \\ge 30$, el TLC garantiza que la distribución muestral de la media $\\bar{X}$ se aproxima a una distribución normal $N\\left(\\mu, \\frac{\\sigma}{\\sqrt{n}}\\right)$.</p>
+
+                        <p><b>Parte b) Cálculo de la probabilidad $P(${p.x1} < \\bar{X} < ${p.x2})$:</b></p>
+                        $$\\sigma_{\\bar{X}} = \\frac{${p.sigma}}{\\sqrt{${p.n}}} = \\frac{${p.sigma}}{${Math.sqrt(p.n)}} = ${se.toFixed(2)}$$
+                        $$Z_1 = \\frac{${p.x1} - ${p.mu}}{${se.toFixed(2)}} = ${z1.toFixed(2)}, \\quad Z_2 = \\frac{${p.x2} - ${p.mu}}{${se.toFixed(2)}} = ${z2.toFixed(2)}$$
+                        $$P(${z1.toFixed(2)} < Z < ${z2.toFixed(2)}) = \\Phi(${z2.toFixed(2)}) - \\Phi(${z1.toFixed(2)}) = ${jStat.normal.cdf(p.x2, p.mu, se).toFixed(4)} - ${jStat.normal.cdf(p.x1, p.mu, se).toFixed(4)}$$
+                        $$= \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: se, shade: [
+                            { from: p.x1, to: p.x2, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 19,
+                category: "TLC",
+                title: "19. Muestreo Normal - Auditoría Análisis Discriminante",
+                statement: "Latencia con $\\mu=120\\text{ ms}$ y varianza $\\sigma^2=900\\text{ ms}^2$ ($\\sigma=30$). Muestra $n=100$. a) Parámetros $\\mu_{\\bar{X}}$ y $\\sigma_{\\bar{X}}$. b) Probabilidad de aprobar auditoría si $\\bar{X} < 125\\text{ ms}$.",
+                params: [
+                    { id: "mu", label: "Media Poblacional (μ)", min: 80, max: 200, step: 5, val: 120 },
+                    { id: "var", label: "Varianza (σ²)", min: 100, max: 2500, step: 100, val: 900 },
+                    { id: "n", label: "Muestra (n)", min: 25, max: 400, step: 25, val: 100 },
+                    { id: "maxAudit", label: "Máximo Aprobación", min: 110, max: 140, step: 1, val: 125 }
+                ],
+                solve: (p) => {
+                    const sigma = Math.sqrt(p.var);
+                    const se = sigma / Math.sqrt(p.n);
+                    const z = (p.maxAudit - p.mu) / se;
+                    const prob = jStat.normal.cdf(p.maxAudit, p.mu, se);
+
+                    return {
+                        metrics: [
+                            { label: "Media Muestral μ_xbar", value: p.mu + " ms" },
+                            { label: "Error Estándar σ_xbar", value: se.toFixed(2) + " ms" },
+                            { label: "P(X̄ < " + p.maxAudit + " ms)", value: (prob * 100).toFixed(2) + "%" }
+                        ],
+                        math: `
+                        <p><b>Parte a) Parámetros de la distribución muestral:</b></p>
+                        $$\\mu_{\\bar{X}} = \\mu = \\mathbf{${p.mu}\\text{ ms}}$$
+                        $$\\sigma_{\\bar{X}} = \\frac{\\sigma}{\\sqrt{n}} = \\frac{\\sqrt{${p.var}}}{\\sqrt{${p.n}}} = \\frac{${sigma}}{${Math.sqrt(p.n)}} = \\mathbf{${se.toFixed(2)}\\text{ ms}}$$
+
+                        <p><b>Parte b) Probabilidad de aprobar la auditoría ($P(\\bar{X} < ${p.maxAudit})$):</b></p>
+                        $$Z = \\frac{${p.maxAudit} - ${p.mu}}{${se.toFixed(2)}} = ${z.toFixed(2)}$$
+                        $$P(\\bar{X} < ${p.maxAudit}) = \\Phi(${z.toFixed(2)}) = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: se, shade: [
+                            { from: p.mu - 4*se, to: p.maxAudit, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 20,
+                category: "TLC",
+                title: "20. Muestreo Normal - Umbral Crítico Lima-Chiclayo",
+                statement: "Tiempos de viaje con $\\mu=750\\text{ min}$ y $\\sigma=45\\text{ min}$. Muestra $n=36$. Hallar el umbral máximo de retraso promedio con solo $5\\%$ de probabilidad de ser superado.",
+                params: [
+                    { id: "mu", label: "Media (μ min)", min: 500, max: 1000, step: 10, val: 750 },
+                    { id: "sigma", label: "Desv. Est. (σ min)", min: 10, max: 100, step: 5, val: 45 },
+                    { id: "n", label: "Muestra (n)", min: 10, max: 100, step: 1, val: 36 },
+                    { id: "alpha", label: "Probabilidad Superior", min: 0.01, max: 0.20, step: 0.01, val: 0.05 }
+                ],
+                solve: (p) => {
+                    const se = p.sigma / Math.sqrt(p.n);
+                    const z = jStat.normal.inv(1 - p.alpha, 0, 1);
+                    const xBarCrit = p.mu + z * se;
+
+                    return {
+                        metrics: [
+                            { label: "Umbral Crítico X̄", value: xBarCrit.toFixed(2) + " min", delta: `Top ${(p.alpha*100)}%` },
+                            { label: "Error Estándar (SE)", value: se.toFixed(2) + " min" },
+                            { label: "Z crítico", value: z.toFixed(4) }
+                        ],
+                        math: `
+                        <p>Buscamos el tiempo promedio $\\bar{X}_{\\text{crit}}$ tal que $P(\\bar{X} > \\bar{X}_{\\text{crit}}) = ${p.alpha}$.</p>
+                        <p>1. Calculamos el error estándar de la muestra:</p>
+                        $$\\sigma_{\\bar{X}} = \\frac{\\sigma}{\\sqrt{n}} = \\frac{${p.sigma}}{\\sqrt{${p.n}}} = \\frac{${p.sigma}}{${Math.sqrt(p.n)}} = ${se.toFixed(2)}\\text{ min}$$
+                        <p>2. Buscamos el percentil $Z_{1-${p.alpha}} = Z_{${(1-p.alpha).toFixed(2)}}$:</p>
+                        $$Z = \\Phi^{-1}(${(1-p.alpha).toFixed(2)}) = ${z.toFixed(4)}$$
+                        <p>3. Despejamos el umbral crítico $\\bar{X}_{\\text{crit}}$:</p>
+                        $$\\bar{X}_{\\text{crit}} = \\mu + Z \\cdot \\sigma_{\\bar{X}} = ${p.mu} + (${z.toFixed(4)} \\times ${se.toFixed(2)}) = \\mathbf{${xBarCrit.toFixed(2)}\\text{ minutos}}$$
+                        `,
+                        chart: { type: 'normal', mu: p.mu, sigma: se, shade: [
+                            { from: xBarCrit, to: p.mu + 4*se, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 21,
+                category: "tStudent",
+                title: "21. Dist. t-Student - Consumo RAM Algoritmo Clustering",
+                statement: "Un estudiante afirma que su algoritmo consume $\\mu=512\\text{ MB}$. Prueba con $n=16$, arroja $\\bar{X}=530\\text{ MB}$ y $S=24\\text{ MB}$. Hallar $P(\\bar{X} \\le 530)$ bajo la afirmación.",
+                params: [
+                    { id: "mu0", label: "Media Afirmada (μ0)", min: 450, max: 600, step: 5, val: 512 },
+                    { id: "n", label: "Muestra (n)", min: 5, max: 50, step: 1, val: 16 },
+                    { id: "xBar", label: "Media Muestral (X̄)", min: 480, max: 560, step: 1, val: 530 },
+                    { id: "s", label: "Desv. Est. Muestral (S)", min: 5, max: 50, step: 1, val: 24 }
+                ],
+                solve: (p) => {
+                    const df = p.n - 1;
+                    const se = p.s / Math.sqrt(p.n);
+                    const tStat = (p.xBar - p.mu0) / se;
+                    const prob = jStat.studentt.cdf(tStat, df);
+
+                    return {
+                        metrics: [
+                            { label: "Estadístico t", value: tStat.toFixed(3) },
+                            { label: "P(X̄ ≤ " + p.xBar + ")", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "Grados de Libertad", value: df }
+                        ],
+                        math: `
+                        <p>Como la desviación estándar poblacional $\\sigma$ es desconocida y la muestra es pequeña ($n=${p.n} < 30$), utilizamos el estadístico $t$ de Student con $\\nu = n-1 = ${df}$ grados de libertad.</p>
+                        $$\\text{SE} = \\frac{S}{\\sqrt{n}} = \\frac{${p.s}}{\\sqrt{${p.n}}} = \\frac{${p.s}}{${Math.sqrt(p.n)}} = ${se.toFixed(2)}$$
+                        $$t_{\\text{calc}} = \\frac{\\bar{X} - \\mu_0}{\\text{SE}} = \\frac{${p.xBar} - ${p.mu0}}{${se.toFixed(2)}} = \\mathbf{${tStat.toFixed(3)}}$$
+                        <p>Calculamos la probabilidad acumulada $P(t_{${df}} \\le ${tStat.toFixed(3)})$: </p>
+                        $$P(\\bar{X} \\le ${p.xBar}) = P(t_{${df}} \\le ${tStat.toFixed(3)}) = \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'tstudent', df: df, shade: [
+                            { from: -4, to: tStat, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 22,
+                category: "tStudent",
+                title: "22. Dist. t-Student - Latencia ScienceDirect",
+                statement: "Tiempo esperado $\\mu=400\\text{ ms}$. Muestra de $n=20$ peticiones con $S=30\\text{ ms}$. ¿Cuál es la probabilidad de que la latencia media muestral caiga entre 385 ms y 415 ms?",
+                params: [
+                    { id: "mu0", label: "Media Esperada (μ)", min: 300, max: 500, step: 10, val: 400 },
+                    { id: "n", label: "Muestra (n)", min: 5, max: 50, step: 1, val: 20 },
+                    { id: "s", label: "Desv. Muestral (S)", min: 5, max: 60, step: 1, val: 30 },
+                    { id: "x1", label: "Límite Inferior (ms)", min: 350, max: 400, step: 5, val: 385 },
+                    { id: "x2", label: "Límite Superior (ms)", min: 400, max: 450, step: 5, val: 415 }
+                ],
+                solve: (p) => {
+                    const df = p.n - 1;
+                    const se = p.s / Math.sqrt(p.n);
+                    const t1 = (p.x1 - p.mu0) / se;
+                    const t2 = (p.x2 - p.mu0) / se;
+                    const prob = jStat.studentt.cdf(t2, df) - jStat.studentt.cdf(t1, df);
+
+                    return {
+                        metrics: [
+                            { label: "P(" + p.x1 + " < X̄ < " + p.x2 + ")", value: (prob * 100).toFixed(2) + "%" },
+                            { label: "t1 (x=" + p.x1 + ")", value: t1.toFixed(3) },
+                            { label: "t2 (x=" + p.x2 + ")", value: t2.toFixed(3) },
+                            { label: "Grados Libertad", value: df }
+                        ],
+                        math: `
+                        <p>Estandarizamos los valores a la escala $t$ de Student con $\\nu = ${p.n}-1 = ${df}$ grados de libertad:</p>
+                        $$\\text{SE} = \\frac{S}{\\sqrt{n}} = \\frac{${p.s}}{\\sqrt{${p.n}}} = ${se.toFixed(4)}$$
+                        $$t_1 = \\frac{${p.x1} - ${p.mu0}}{${se.toFixed(4)}} = ${t1.toFixed(3)}, \\quad t_2 = \\frac{${p.x2} - ${p.mu0}}{${se.toFixed(4)}} = ${t2.toFixed(3)}$$
+                        <p>Calculamos el área entre $t_1$ y $t_2$:</p>
+                        $$P(${p.x1} < \\bar{X} < ${p.x2}) = F_t(${t2.toFixed(3)}) - F_t(${t1.toFixed(3)}) = ${jStat.studentt.cdf(t2, df).toFixed(4)} - ${jStat.studentt.cdf(t1, df).toFixed(4)}$$
+                        $$= \\mathbf{${prob.toFixed(4)}} \\quad (${(prob*100).toFixed(2)}\\%)$$
+                        `,
+                        chart: { type: 'tstudent', df: df, shade: [
+                            { from: t1, to: t2, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            },
+            {
+                id: 23,
+                category: "tStudent",
+                title: "23. Dist. t-Student - Alerta Ruta Crítica Bus Cama",
+                statement: "Tiempo esperado $\\mu=780\\text{ min}$. Muestra $n=10$ viajes de Transportes Línea con $S=45\\text{ min}$. Hallar el tiempo promedio mínimo $\\bar{X}$ en el top 5% que activaría la alerta de 'ruta crítica'.",
+                params: [
+                    { id: "mu0", label: "Tiempo Esperado (μ)", min: 600, max: 900, step: 10, val: 780 },
+                    { id: "n", label: "Muestra (n)", min: 3, max: 30, step: 1, val: 10 },
+                    { id: "s", label: "Desv. Muestral (S)", min: 10, max: 100, step: 5, val: 45 },
+                    { id: "alpha", label: "Top Porcentaje Alerta", min: 0.01, max: 0.15, step: 0.01, val: 0.05 }
+                ],
+                solve: (p) => {
+                    const df = p.n - 1;
+                    const se = p.s / Math.sqrt(p.n);
+                    const tCrit = jStat.studentt.inv(1 - p.alpha, df);
+                    const xBarCrit = p.mu0 + tCrit * se;
+
+                    return {
+                        metrics: [
+                            { label: "Tiempo Crítico X̄", value: xBarCrit.toFixed(2) + " min", delta: `Top ${(p.alpha*100)}% Alerta` },
+                            { label: "t-crítico (α=" + p.alpha + ")", value: tCrit.toFixed(3) },
+                            { label: "Error Estándar (SE)", value: se.toFixed(2) + " min" }
+                        ],
+                        math: `
+                        <p>Buscamos el valor crítico $\\bar{X}_{\\text{crit}}$ que deja una probabilidad de cola superior del $5\\%$ ($P(\\bar{X} > \\bar{X}_{\\text{crit}}) = ${p.alpha}$).</p>
+                        <p>1. Grados de libertad y Error Estándar:</p>
+                        $$\\nu = n - 1 = ${p.n} - 1 = ${df}, \\quad \\text{SE} = \\frac{${p.s}}{\\sqrt{${p.n}}} = \\frac{${p.s}}{${Math.sqrt(p.n).toFixed(4)}} = ${se.toFixed(2)}$$
+                        <p>2. Valor $t$ crítico para la cola derecha:</p>
+                        $$t_{\\text{crit}} = t_{${df}, 1-${p.alpha}} = \\mathbf{${tCrit.toFixed(3)}}$$
+                        <p>3. Despejamos el promedio crítico $\\bar{X}_{\\text{crit}}$:</p>
+                        $$\\bar{X}_{\\text{crit}} = \\mu_0 + t_{\\text{crit}} \\cdot \\text{SE} = ${p.mu0} + (${tCrit.toFixed(3)} \\times ${se.toFixed(2)}) = \\mathbf{${xBarCrit.toFixed(2)}\\text{ minutos}}$$
+                        `,
+                        chart: { type: 'tstudent', df: df, shade: [
+                            { from: tCrit, to: 4, color: 'rgba(255, 75, 75, 0.4)' }
+                        ]}
+                    };
+                }
+            }
+        ];
+
+        // --- GLOBAL APP STATE ---
+        let currentExercise = exercises[0];
+
+        // --- STREAMING_CHUNK: App Initialization and UI Event Listeners ---
+        window.onload = function() {
+            populateExerciseDropdown();
+            loadExercise();
+        };
+
+        function populateExerciseDropdown() {
+            const select = document.getElementById("exerciseSelect");
+            const filter = document.getElementById("topicFilter").value;
+            select.innerHTML = "";
+
+            exercises.forEach(ex => {
+                if (filter === "ALL" || ex.category === filter) {
+                    const opt = document.createElement("option");
+                    opt.value = ex.id;
+                    opt.textContent = ex.title;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        function filterExercises() {
+            populateExerciseDropdown();
+            const select = document.getElementById("exerciseSelect");
+            if (select.options.length > 0) {
+                select.selectedIndex = 0;
+                loadExercise();
+            }
+        }
+
+        function loadExercise() {
+            const id = parseInt(document.getElementById("exerciseSelect").value);
+            currentExercise = exercises.find(e => e.id === id);
+
+            // Set Header Information
+            document.getElementById("exerciseCategory").innerHTML = `<i class="fa-solid fa-tag"></i> TEMA: ${currentExercise.category}`;
+            document.getElementById("exerciseTitle").textContent = currentExercise.title;
+            document.getElementById("exerciseStatement").innerHTML = currentExercise.statement;
+
+            // Render Dynamic Parameter Input Widgets
+            renderWidgets();
+
+            // Perform Calculations and Update UI
+            updateCalculations();
+        }
+
+        function renderWidgets() {
+            const container = document.getElementById("dynamicWidgets");
+            container.innerHTML = `<h3 class="text-xs font-semibold text-stGray uppercase tracking-wider mb-2">Parámetros de Entrada</h3>`;
+
+            currentExercise.params.forEach(param => {
+                const wrapper = document.createElement("div");
+                wrapper.className = "bg-white p-3 rounded-lg border border-gray-200 shadow-sm";
+
+                wrapper.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-semibold text-stText">${param.label}</label>
+                        <span id="val_${param.id}" class="text-xs font-bold text-stRed bg-red-50 px-2 py-0.5 rounded">${param.val}</span>
+                    </div>
+                    <input type="range" id="input_${param.id}" min="${param.min}" max="${param.max}" step="${param.step}" value="${param.val}"
+                        oninput="onParamChange('${param.id}')" class="w-full accent-stRed h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        function onParamChange(paramId) {
+            const val = parseFloat(document.getElementById(`input_${paramId}`).value);
+            document.getElementById(`val_${paramId}`).textContent = val;
+            updateCalculations();
+        }
+
+        function updateCalculations() {
+            // Read param values
+            const paramVals = {};
+            currentExercise.params.forEach(p => {
+                const el = document.getElementById(`input_${p.id}`);
+                paramVals[p.id] = el ? parseFloat(el.value) : p.val;
+            });
+
+            // Run Solver Logic
+            const result = currentExercise.solve(paramVals);
+
+            // Render Metrics Cards
+            renderMetrics(result.metrics);
+
+            // Render Math Solution and Statement with MathJax
+            const mathContainer = document.getElementById("mathSolution");
+            const statementContainer = document.getElementById("exerciseStatement");
+
+            mathContainer.innerHTML = result.math;
+
+            if (window.MathJax) {
+                // Limpia la memoria de renderizado previo
+                if (window.MathJax.typesetClear) {
+                    window.MathJax.typesetClear();
+                }
+                // Procesa tanto el enunciado como la solución paso a paso
+                window.MathJax.typesetPromise([statementContainer, mathContainer]).catch((err) => console.log(err));
+            }
+
+            // Render Plotly Visual Distribution
+            renderChart(result.chart);
+        }
+
+        function renderMetrics(metrics) {
+            const container = document.getElementById("metricsContainer");
+            container.innerHTML = "";
+
+            metrics.forEach(m => {
+                const card = document.createElement("div");
+                card.className = "st-metric flex flex-col justify-between";
+
+                card.innerHTML = `
+                    <span class="text-xs font-semibold text-stGray uppercase tracking-wider">${m.label}</span>
+                    <div class="text-2xl font-extrabold text-stText mt-1 mb-1">${m.value}</div>
+                    ${m.delta ? `<span class="text-xs font-semibold text-stRed"><i class="fa-solid fa-arrow-trend-up mr-1"></i>${m.delta}</span>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- STREAMING_CHUNK: Rendering Plotly Interactive Charts ---
+        function renderChart(config) {
+            let xVals = [];
+            let yVals = [];
+            let traces = [];
+
+            if (config.type === 'normal') {
+                const min = config.mu - 4 * config.sigma;
+                const max = config.mu + 4 * config.sigma;
+                const step = (max - min) / 200;
+
+                for (let x = min; x <= max; x += step) {
+                    xVals.push(x);
+                    yVals.push(jStat.normal.pdf(x, config.mu, config.sigma));
+                }
+
+                // Base PDF Line
+                traces.push({
+                    x: xVals,
+                    y: yVals,
+                    mode: 'lines',
+                    name: 'PDF Normal',
+                    line: { color: '#31333F', width: 2.5 }
+                });
+
+                // Add Shaded Areas
+                if (config.shade) {
+                    config.shade.forEach(s => {
+                        let sx = [], sy = [];
+                        for (let x = s.from; x <= s.to; x += step) {
+                            sx.push(x);
+                            sy.push(jStat.normal.pdf(x, config.mu, config.sigma));
+                        }
+                        traces.push({
+                            x: [s.from, ...sx, s.to],
+                            y: [0, ...sy, 0],
+                            fill: 'tozeroy',
+                            mode: 'none',
+                            fillcolor: s.color || 'rgba(255, 75, 75, 0.4)',
+                            name: 'Área Sombreada'
+                        });
+                    });
+                }
+            } 
+            else if (config.type === 'exponential') {
+                const max = config.max || 15;
+                const step = max / 200;
+
+                for (let x = 0; x <= max; x += step) {
+                    xVals.push(x);
+                    yVals.push(jStat.exponential.pdf(x, config.lambda));
+                }
+
+                traces.push({
+                    x: xVals,
+                    y: yVals,
+                    mode: 'lines',
+                    name: 'PDF Exponencial',
+                    line: { color: '#31333F', width: 2.5 }
+                });
+
+                if (config.shade) {
+                    config.shade.forEach(s => {
+                        let sx = [], sy = [];
+                        for (let x = Math.max(0, s.from); x <= Math.min(max, s.to); x += step) {
+                            sx.push(x);
+                            sy.push(jStat.exponential.pdf(x, config.lambda));
+                        }
+                        traces.push({
+                            x: [Math.max(0, s.from), ...sx, Math.min(max, s.to)],
+                            y: [0, ...sy, 0],
+                            fill: 'tozeroy',
+                            mode: 'none',
+                            fillcolor: s.color || 'rgba(255, 75, 75, 0.4)',
+                            name: 'Área Sombreada'
+                        });
+                    });
+                }
+            } 
+            else if (config.type === 'gamma') {
+                const max = config.max || 20;
+                const step = max / 200;
+
+                for (let x = 0.01; x <= max; x += step) {
+                    xVals.push(x);
+                    yVals.push(jStat.gamma.pdf(x, config.shape, config.scale));
+                }
+
+                traces.push({
+                    x: xVals,
+                    y: yVals,
+                    mode: 'lines',
+                    name: 'PDF Gamma',
+                    line: { color: '#31333F', width: 2.5 }
+                });
+
+                if (config.shade) {
+                    config.shade.forEach(s => {
+                        let sx = [], sy = [];
+                        for (let x = Math.max(0.01, s.from); x <= Math.min(max, s.to); x += step) {
+                            sx.push(x);
+                            sy.push(jStat.gamma.pdf(x, config.shape, config.scale));
+                        }
+                        traces.push({
+                            x: [Math.max(0.01, s.from), ...sx, Math.min(max, s.to)],
+                            y: [0, ...sy, 0],
+                            fill: 'tozeroy',
+                            mode: 'none',
+                            fillcolor: s.color || 'rgba(255, 75, 75, 0.4)',
+                            name: 'Área Sombreada'
+                        });
+                    });
+                }
+            } 
+            else if (config.type === 'chisquare') {
+                const max = config.max || 30;
+                const step = max / 200;
+
+                for (let x = 0.05; x <= max; x += step) {
+                    xVals.push(x);
+                    yVals.push(jStat.chisquare.pdf(x, config.df));
+                }
+
+                traces.push({
+                    x: xVals,
+                    y: yVals,
+                    mode: 'lines',
+                    name: `Chi2 (df=${config.df})`,
+                    line: { color: '#31333F', width: 2.5 }
+                });
+
+                if (config.shade) {
+                    config.shade.forEach(s => {
+                        let sx = [], sy = [];
+                        for (let x = Math.max(0.05, s.from); x <= Math.min(max, s.to); x += step) {
+                            sx.push(x);
+                            sy.push(jStat.chisquare.pdf(x, config.df));
+                        }
+                        traces.push({
+                            x: [Math.max(0.05, s.from), ...sx, Math.min(max, s.to)],
+                            y: [0, ...sy, 0],
+                            fill: 'tozeroy',
+                            mode: 'none',
+                            fillcolor: s.color || 'rgba(255, 75, 75, 0.4)',
+                            name: 'Área Sombreada'
+                        });
+                    });
+                }
+            } 
+            else if (config.type === 'tstudent') {
+                const min = -4.5;
+                const max = 4.5;
+                const step = (max - min) / 200;
+
+                for (let x = min; x <= max; x += step) {
+                    xVals.push(x);
+                    yVals.push(jStat.studentt.pdf(x, config.df));
+                }
+
+                traces.push({
+                    x: xVals,
+                    y: yVals,
+                    mode: 'lines',
+                    name: `t-Student (df=${config.df})`,
+                    line: { color: '#31333F', width: 2.5 }
+                });
+
+                if (config.shade) {
+                    config.shade.forEach(s => {
+                        let sx = [], sy = [];
+                        for (let x = Math.max(min, s.from); x <= Math.min(max, s.to); x += step) {
+                            sx.push(x);
+                            sy.push(jStat.studentt.pdf(x, config.df));
+                        }
+                        traces.push({
+                            x: [Math.max(min, s.from), ...sx, Math.min(max, s.to)],
+                            y: [0, ...sy, 0],
+                            fill: 'tozeroy',
+                            mode: 'none',
+                            fillcolor: s.color || 'rgba(255, 75, 75, 0.4)',
+                            name: 'Área Sombreada'
+                        });
+                    });
+                }
+            }
+
+            const layout = {
+                margin: { t: 10, b: 40, l: 40, r: 20 },
+                showlegend: false,
+                xaxis: { title: 'Variable (X)', gridcolor: '#F0F2F6' },
+                yaxis: { title: 'Densidad (f(x))', gridcolor: '#F0F2F6' },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+
+            Plotly.newPlot('plotlyChart', traces, layout, { responsive: true, displayModeBar: false });
+        }
+    </script>
+</body>
+</html>
